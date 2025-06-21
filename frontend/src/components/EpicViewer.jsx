@@ -7,7 +7,7 @@ const EpicViewer = ({ date }) => {
   useEffect(() => {
     const fetchEpicImages = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/epic?date=${date}`);
+        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/epic?date=${date}`);
         setImages(res.data);
       } catch (err) {
         console.error("EPIC fetch failed:", err.message);

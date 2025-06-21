@@ -11,7 +11,7 @@ const ApodViewer = ({ date, setDate, toggleTheme, theme }) => {
 //fetching APOD
   const fetchAPOD = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/apod?date=${date}`);
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/apod?date=${date}`);
       setApod(res.data);
     } catch (err) {
       console.error('Failed to fetch APOD:', err.message);

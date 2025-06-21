@@ -19,7 +19,7 @@ const NeoChart = ({ date }) => {
   useEffect(() => {
     const fetchNEO = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/neo?start_date=${date}`);
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/neo?start_date=${date}`);
         const data = await res.json();
         const neoList = data.near_earth_objects[date];
 
@@ -34,7 +34,7 @@ const NeoChart = ({ date }) => {
             {
               label: "Velocity (km/h)",
               data: velocities,
-              backgroundColor: "#00BFFF",  // ✅ Yellow bars
+              backgroundColor: "#00BFFF",  // 
               borderRadius: 6,
             }
           ]

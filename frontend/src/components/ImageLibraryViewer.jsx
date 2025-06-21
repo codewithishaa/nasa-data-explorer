@@ -11,7 +11,7 @@ const ImageLibraryViewer = () => {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(`http://localhost:5000/api/image?query=${query}`);
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/image?query=${query}`);
       const data = Array.isArray(res.data) ? res.data : [];
       if (!data.length) {
         setError("No results available.");
