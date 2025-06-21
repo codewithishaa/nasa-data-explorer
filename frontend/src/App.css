@@ -1,0 +1,18 @@
+/* Base Reset */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Let theme.css handle colors and backgrounds */
+h1, h2 {
+  margin-top: 1rem;
+}
+
+img {
+  border-radius: 12px;
+  margin-top: 1rem;
+  max-width: 100%;
+}

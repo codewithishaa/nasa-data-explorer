@@ -1,0 +1,55 @@
+ApodViewer.css
+
+.apod-container {
+  background-color: #161b22;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1rem auto;
+  max-width: 900px;
+  color: #c9d1d9;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.apod-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.apod-controls input[type="date"],
+.apod-controls button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 1rem;
+}
+
+.apod-controls button {
+  background-color: #238636;
+  color: white;
+  cursor: pointer;
+}
+
+.apod-controls button:hover {
+  background-color: #2ea043;
+}
+
+.apod-content {
+  text-align: center;
+}
+
+.apod-content img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin-top: 1rem;
+}
+
+.apod-tldr {
+  margin-top: 1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: justify;
+}
