@@ -1,7 +1,7 @@
 # 🚀 NASA Data Explorer – Full Stack Project
 
 This is a full-stack web application that I developed for the Software Engineer Coding Challenge. It uses live NASA APIs to let users explore real-time space data through an interactive and visual dashboard.
-
+ 
 ---
 
 ## 🌐 Live Demo
