@@ -1,90 +1,163 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchEPIC } from "../services/nasaApi";
+import LoadingSkeleton from "./common/LoadingSkeleton";
+import EmptyState from "./common/EmptyState";
+import ImageModal from "./common/ImageModal";
 
-const EpicViewer = ({ date }) => {
+const EpicViewer = ({ date, refreshKey }) => {
   const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [actualDate, setActualDate] = useState("");
+
+  const fetchEpicImages = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchEPIC(date);
+      setImages(data?.images || []);
+      setActualDate(data?.actualDate || "");
+    } catch (err) {
+      console.error("EPIC fetch failed:", err.message);
+      setImages([]);
+      setActualDate("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEpicImages = async () => {
-      try {
-        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/epic?date=${date}`);
-        setImages(res.data);
-      } catch (err) {
-        console.error("EPIC fetch failed:", err.message);
-      }
-    };
-
-    if (date) fetchEpicImages();
-  }, [date]);
+    if (date) {
+      fetchEpicImages();
+    }
+  }, [date, refreshKey]);
 
   return (
-    <div className="chart-wrapper">
-      <h2 style={{ textAlign: "center" }}>🌍 NASA EPIC Earth Images</h2>
+    <div className="glass-panel" style={styles.container}>
+      {actualDate && (
+        <div style={{ marginBottom: "1rem", color: "var(--primary-color)", fontSize: "0.85rem", fontWeight: "600" }}>
+          🛰️ Displaying the latest available NASA EPIC imagery.
+        </div>
+      )}
 
-      {images.length === 0 ? (
-        <p style={{ textAlign: "center" }}>No EPIC images available for this date.</p>
+      {loading ? (
+        <div style={{ padding: "2rem 0" }}>
+          <LoadingSkeleton type="card" count={3} message="Loading Earth Observations..." />
+        </div>
+      ) : images.length === 0 ? (
+        <EmptyState
+          message="No Earth Observations Recorded"
+          icon="🌍"
+          subtext="No EPIC imagery available for the selected date."
+        />
       ) : (
-        <div
-          style={{
-            display: "flex",
-            overflowX: "auto",
-            gap: "1.5rem",
-            padding: "1rem 0",
-            paddingBottom: "1.5rem",
-          }}
-        >
+        <div style={styles.grid}>
           {images.map((img, i) => (
             <div
-              className="mars-card"
+              className="media-card glass-panel"
               key={i}
-              style={{
-                minWidth: "240px",
-                maxWidth: "240px",
-                flex: "0 0 auto",
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: "12px",
-                alignItems: "center",
-              }}
+              onClick={() => setSelectedImage(img)}
+              style={styles.epicCard}
             >
-              <div
-                style={{
-                  width: "220px",
-                  height: "220px",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  backgroundColor: "#000",
-                  borderRadius: "12px 12px 0 0",
+              <img
+                src={img.imageUrl}
+                alt="Earth"
+                style={styles.epicImage}
+                onError={(e) => {
+                  e.target.src = "https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?q=80&w=1000";
                 }}
-              >
-                <img
-                  src={img.image}
-                  alt="Earth"
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                    borderRadius: "12px",
-                  }}
-                />
-              </div>
-
-              <div className="mars-meta" style={{ padding: "0.75rem", width: "100%" }}>
-                <p style={{ fontWeight: "bold", fontSize: "1rem" }}>📸 EPIC Snapshot</p>
-                <p style={{ fontSize: "0.85rem", lineHeight: "1.3" }}>
-                  {img.caption.length > 80 ? img.caption.slice(0, 80) + "..." : img.caption}
-                </p>
-                <p style={{ fontSize: "0.8rem", color: "gray", marginTop: "4px" }}>
-                  🕒 {new Date(img.time).toLocaleTimeString()}
-                </p>
+              />
+              <div className="media-card-body">
+                <div>
+                  <h4 className="media-card-title">DSCOVR EPIC Snapshot</h4>
+                  <p className="media-card-desc">{img.caption}</p>
+                </div>
+                <div className="media-card-meta">
+                  <span>📅 {img.date ? img.date.split(" ")[0] : ""}</span>
+                  <span style={{ fontSize: "0.7rem", color: "rgba(255, 255, 255, 0.4)" }}>
+                    ID: {img.identifier}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {selectedImage && (
+        <ImageModal
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          imageUrl={selectedImage.imageUrl}
+          title="DSCOVR Earth Polychromatic Imaging Camera (EPIC) Capture"
+          description={selectedImage.caption}
+          metadata={{
+            "Satellite": "DSCOVR Spacecraft",
+            "Camera": "EPIC",
+            "Distance": "~1 Million Miles (L1 Orbit)",
+            "Capture Date/Time": selectedImage.date,
+            "Image Identifier": selectedImage.identifier,
+          }}
+        />
+      )}
     </div>
   );
+};
+
+const styles = {
+  container: {
+    padding: "1.5rem",
+    marginTop: "1.5rem",
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "1.5rem",
+    marginBottom: "1.5rem",
+    flexWrap: "wrap",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+    paddingBottom: "1.25rem",
+  },
+  textBlock: {
+    flex: "1 1 350px",
+  },
+  infoText: {
+    color: "rgba(255, 255, 255, 0.6)",
+    fontSize: "0.88rem",
+    lineHeight: "1.4",
+  },
+  pickerWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.4rem",
+  },
+  label: {
+    color: "rgba(255, 255, 255, 0.4)",
+    fontSize: "0.75rem",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+  },
+  dateInput: {
+    width: "180px",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+    gap: "1.5rem",
+  },
+  epicCard: {
+    height: "460px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  epicImage: {
+    width: "100%",
+    height: "260px",
+    objectFit: "contain",
+    background: "#000",
+    borderRadius: "16px",
+  },
 };
 
 export default EpicViewer;

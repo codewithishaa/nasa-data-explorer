@@ -1,34 +1,76 @@
 const axios = require('axios');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
-const NASA_API_KEY = process.env.NASA_API_KEY;
 
 exports.getEpicImages = async (req, res) => {
-  try {
-    const { date } = req.query; // format: YYYY-MM-DD
-    const [year, month, day] = date.split('-');
+  const apiKey = process.env.NASA_API_KEY || "DEMO_KEY";
+  const { date } = req.query; // format: YYYY-MM-DD
 
-    const metadataUrl = `https://api.nasa.gov/EPIC/api/natural/date/${date}?api_key=${NASA_API_KEY}`;
-    const metaResponse = await axios.get(metadataUrl);
-    const images = metaResponse.data;
+  if (!date) {
+    return res.status(400).json({ error: "Missing 'date' parameter" });
+  }
 
-    if (!images.length) {
-      return res.json([]);
+  const cleanDate = date.split('T')[0];
+  console.log(`\nIncoming EPIC request for date: ${cleanDate}`);
+
+  let targetDate = new Date(cleanDate);
+  let attempts = 0;
+  let images = [];
+  let actualDateStr = cleanDate;
+
+  while (attempts < 10) {
+    const formattedDate = targetDate.toISOString().split("T")[0];
+    console.log(`Trying EPIC: ${formattedDate}`);
+
+    try {
+      const metadataUrl = `https://api.nasa.gov/EPIC/api/natural/date/${formattedDate}?api_key=${apiKey}`;
+      const response = await axios.get(metadataUrl);
+
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        images = response.data;
+        actualDateStr = formattedDate;
+        console.log(`Found ${images.length} images on ${formattedDate}`);
+        break;
+      } else {
+        console.log("No data");
+      }
+    } catch (apiErr) {
+      console.warn(`EPIC error on ${formattedDate}:`, apiErr.response?.status, apiErr.response?.data || apiErr.message);
+      if (apiErr.response) {
+        const status = apiErr.response.status;
+        if (status === 429) {
+          console.error("⚠️ NASA rate limit hit — stopping EPIC search loop");
+          break;
+        }
+        if (status === 403 || status === 401) {
+          console.error("❌ NASA API authentication failure: Invalid API Key");
+          return res.status(403).json({ error: "Invalid NASA API key" });
+        }
+      }
     }
 
-    const baseImageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${year}/${month}/${day}/png`;
-
-    const results = images.map((img) => ({
-      caption: img.caption,
-      imageUrl: `${baseImageUrl}/${img.image}.png`,
-      date: img.date,
-    }));
-
-    res.json(results);
-  } catch (err) {
-    console.error('EPIC fetch error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch EPIC images' });
+    targetDate.setDate(targetDate.getDate() - 1);
+    attempts++;
   }
+
+  const results = images.map((img) => {
+    // Build dynamically from metadata.date
+    const datePart = img.date.split(' ')[0]; // "YYYY-MM-DD"
+    const [year, month, day] = datePart.split('-');
+    const imageUrl = `https://api.nasa.gov/EPIC/archive/natural/${year}/${month}/${day}/png/${img.image}.png?api_key=${apiKey}`;
+
+    return {
+      caption: img.caption,
+      imageUrl: imageUrl,
+      identifier: img.identifier,
+      date: img.date
+    };
+  });
+
+  const responsePayload = {
+    requestedDate: cleanDate,
+    actualDate: images.length > 0 ? actualDateStr : null,
+    images: results
+  };
+
+  console.log(`Returning ${results.length} images`);
+  return res.json(responsePayload);
 };

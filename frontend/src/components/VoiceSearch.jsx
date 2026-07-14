@@ -1,37 +1,40 @@
 import React, { useState } from "react";
 
-const VoiceSearch = ({ onDateRecognized }) => {
+const VoiceSearch = ({ onResult, label = "Voice Search", style = {} }) => {
   const [listening, setListening] = useState(false);
-  const [spokenText, setSpokenText] = useState("");
+  const [error, setError] = useState(false);
 
   const handleVoiceInput = () => {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice recognition is not supported in this browser. Please try Google Chrome.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.interimResults = false;
 
     recognition.onstart = () => {
       setListening(true);
-      setSpokenText("Listening...");
+      setError(false);
     };
 
     recognition.onresult = (event) => {
       const voiceInput = event.results[0][0].transcript;
-      setSpokenText(voiceInput);
       setListening(false);
-
-      const parsed = new Date(voiceInput);
-      if (!isNaN(parsed)) {
-        const formatted = parsed.toISOString().split("T")[0];
-        if (onDateRecognized) {
-          onDateRecognized(formatted);
-        }
-      } else {
-        console.error("Could not parse date from voice:", voiceInput);
+      if (onResult) {
+        onResult(voiceInput);
       }
     };
 
-    recognition.onerror = () => {
-      setSpokenText("Voice recognition error.");
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setError(true);
+      setListening(false);
+    };
+
+    recognition.onend = () => {
       setListening(false);
     };
 
@@ -39,29 +42,36 @@ const VoiceSearch = ({ onDateRecognized }) => {
   };
 
   return (
-    <div style={{ textAlign: "center", marginBottom: "1rem" }}>
-      <h2>🎙️ Voice Search</h2>
-     
-      <div>
-        <button
-          onClick={handleVoiceInput}
-          disabled={listening}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "#2f81f7",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            marginBottom: "0.5rem"
-          }}
-        >
-          {listening ? "Listening..." : "Start Voice Search"}
-        </button>
-      </div>
-      {spokenText && <p>🎧 You said: {spokenText}</p>}
-    </div>
+    <button
+      onClick={handleVoiceInput}
+      disabled={listening}
+      title="Search using voice input"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "0.5rem",
+        background: listening
+          ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
+          : "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
+        color: "#fff",
+        border: "none",
+        borderRadius: "8px",
+        padding: "10px 16px",
+        fontWeight: "600",
+        fontSize: "0.85rem",
+        cursor: "pointer",
+        transition: "background 0.2s, transform 0.1s",
+        ...style,
+      }}
+    >
+      <span style={{ fontSize: "1.1rem" }}>
+        {listening ? "🛑" : "🎙️"}
+      </span>
+      <span>
+        {listening ? "Listening..." : error ? "Error! Retry" : label}
+      </span>
+    </button>
   );
 };
 

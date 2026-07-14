@@ -1,5 +1,5 @@
 // test-key.js
-// ✅ Quick script to test if environment variables are loaded properly
+// Quick script to test if environment variables are loaded properly
 
 // Load environment variables from .env
 require("dotenv").config();

@@ -5,15 +5,15 @@ import "./styles/theme.css";
 const Home = lazy(() => import("./pages/Home"));
 
 function App() {
-  const [theme, setTheme] = useState("light"); // 
+  const [theme, setTheme] = useState("dark"); // Default to dark space theme
   
   useEffect(() => {
     document.body.className = theme;
   }, [theme]);
 
   return (
-    <div className="container">
-      <Suspense fallback={<p style={{ textAlign: "center" }}>Loading app...</p>}>
+    <div>
+      <Suspense fallback={<p style={{ textAlign: "center", padding: "3rem", color: "#fff" }}>Loading NASA Data Explorer...</p>}>
         <Home theme={theme} toggleTheme={() => setTheme(theme === "light" ? "dark" : "light")} />
       </Suspense>
     </div>
