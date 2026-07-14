@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ApodViewer from "../components/ApodViewer";
 import AsteroidDashboard from "../components/AsteroidDashboard";
 import MarsRoverViewer from "../components/MarsRoverViewer";
@@ -19,6 +19,10 @@ const Home = ({ theme, toggleTheme }) => {
   const [notification, setNotification] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [librarySearchQuery, setLibrarySearchQuery] = useState("");
+
+  const handleExternalQueryProcessed = useCallback(() => {
+    setLibrarySearchQuery("");
+  }, []);
 
   const scrollToSection = (id) => {
     setActiveSection(id);
@@ -231,7 +235,7 @@ const Home = ({ theme, toggleTheme }) => {
             subtitle="Search NASA's official multimedia archive containing images, videos, and audio from space missions, planets, galaxies, spacecraft, astronauts, telescopes, and historic discoveries."
             badge="Archival Search"
           />
-          <ImageLibraryViewer externalQuery={librarySearchQuery} onExternalQueryProcessed={() => setLibrarySearchQuery("")} />
+          <ImageLibraryViewer externalQuery={librarySearchQuery} onExternalQueryProcessed={handleExternalQueryProcessed} />
         </section>
 
         {/* Mars Rover Section */}

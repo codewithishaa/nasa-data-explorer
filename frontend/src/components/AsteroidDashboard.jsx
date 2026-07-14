@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { fetchNEO } from "../services/nasaApi";
 import { Bar, Pie, Line } from "react-chartjs-2";
 import {
@@ -33,7 +33,7 @@ const AsteroidDashboard = ({ date, refreshKey }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchNEOData = async () => {
+  const fetchNEOData = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -47,13 +47,13 @@ const AsteroidDashboard = ({ date, refreshKey }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
 
   useEffect(() => {
     if (date) {
       fetchNEOData();
     }
-  }, [date, refreshKey]);
+  }, [fetchNEOData, refreshKey, date]);
 
   if (loading) {
     return (

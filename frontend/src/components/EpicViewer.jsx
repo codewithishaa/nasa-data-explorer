@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { fetchEPIC } from "../services/nasaApi";
 import LoadingSkeleton from "./common/LoadingSkeleton";
 import EmptyState from "./common/EmptyState";
@@ -10,7 +10,7 @@ const EpicViewer = ({ date, refreshKey }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [actualDate, setActualDate] = useState("");
 
-  const fetchEpicImages = async () => {
+  const fetchEpicImages = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchEPIC(date);
@@ -23,13 +23,13 @@ const EpicViewer = ({ date, refreshKey }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
 
   useEffect(() => {
     if (date) {
       fetchEpicImages();
     }
-  }, [date, refreshKey]);
+  }, [fetchEpicImages, refreshKey, date]);
 
   return (
     <div className="glass-panel" style={styles.container}>

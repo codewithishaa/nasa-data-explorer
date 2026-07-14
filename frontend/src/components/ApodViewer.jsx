@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { fetchAPOD, generateApodSummary } from "../services/nasaApi";
 import LoadingSkeleton from "./common/LoadingSkeleton";
 import ErrorState from "./common/ErrorState";
@@ -12,7 +12,7 @@ const ApodViewer = ({ date, refreshKey }) => {
   const [aiLoading, setAiLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
 
-  const fetchAPODData = async () => {
+  const fetchAPODData = useCallback(async () => {
     setLoading(true);
     setError("");
     setAiSummary("");
@@ -27,7 +27,7 @@ const ApodViewer = ({ date, refreshKey }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
 
   const handleGenerateSummary = async () => {
     if (!apod || !apod.explanation) return;
@@ -39,9 +39,9 @@ const ApodViewer = ({ date, refreshKey }) => {
       console.error("AI summary error:", err.message);
       // Fallback summary generation
       const sentences = apod.explanation
-        .replace(/\s+/g, " ")
-        .split(/(?<=[.!?])\s+/)
-        .filter(s => s.length > 5);
+         .replace(/\s+/g, " ")
+         .split(/(?<=[.!?])\s+/)
+         .filter(s => s.length > 5);
       const fallback = sentences.slice(0, 2).join(" ");
       setAiSummary(fallback || "A beautiful visual capture of deep space structures.");
     } finally {
@@ -53,7 +53,7 @@ const ApodViewer = ({ date, refreshKey }) => {
     if (date) {
       fetchAPODData();
     }
-  }, [date, refreshKey]);
+  }, [fetchAPODData, refreshKey, date]);
 
   if (loading) {
     return (

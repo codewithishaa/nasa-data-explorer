@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { searchNASAImages } from "../services/nasaApi";
 import VoiceSearch from "./VoiceSearch";
 import LoadingSkeleton from "./common/LoadingSkeleton";
@@ -15,8 +15,8 @@ const ImageLibraryViewer = ({ externalQuery, onExternalQueryProcessed }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchImages = async (searchQuery = query, pageNum = 1, append = false) => {
-    if (!searchQuery.trim()) return;
+  const fetchImages = useCallback(async (searchQuery, pageNum = 1, append = false) => {
+    if (!searchQuery || !searchQuery.trim()) return;
     if (append) {
       setAppendLoading(true);
     } else {
@@ -53,11 +53,11 @@ const ImageLibraryViewer = ({ externalQuery, onExternalQueryProcessed }) => {
       setLoading(false);
       setAppendLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchImages();
-  }, []);
+    fetchImages("apollo 11");
+  }, [fetchImages]);
 
   // Listen to external search requests from the Hero Speech recognition
   useEffect(() => {
@@ -68,7 +68,7 @@ const ImageLibraryViewer = ({ externalQuery, onExternalQueryProcessed }) => {
         onExternalQueryProcessed();
       }
     }
-  }, [externalQuery]);
+  }, [externalQuery, fetchImages, onExternalQueryProcessed]);
 
   const handleVoiceResult = (spokenText) => {
     setQuery(spokenText);

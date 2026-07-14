@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { fetchMarsPhotos } from "../services/nasaApi";
 import LoadingSkeleton from "./common/LoadingSkeleton";
 import EmptyState from "./common/EmptyState";
@@ -38,11 +38,12 @@ const MarsRoverViewer = ({ date, refreshKey }) => {
 
   const info = ROVER_METADATA[rover.toLowerCase()] || ROVER_METADATA.curiosity;
 
-  const fetchPhotos = async () => {
+  const fetchPhotos = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchMarsPhotos(date, rover, camera);
-      setNeosFetchWorkaround(data);
+      setPhotos(data?.photos || []);
+      setActualDate(data?.actualDate || "");
     } catch (err) {
       console.error("Failed to fetch Mars photos", err);
       setPhotos([]);
@@ -50,18 +51,13 @@ const MarsRoverViewer = ({ date, refreshKey }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const setNeosFetchWorkaround = (data) => {
-    setPhotos(data?.photos || []);
-    setActualDate(data?.actualDate || "");
-  };
+  }, [date, rover, camera]);
 
   useEffect(() => {
     if (date) {
       fetchPhotos();
     }
-  }, [date, rover, camera, refreshKey]);
+  }, [fetchPhotos, refreshKey, date]);
 
   const camerasList = [
     { value: "ALL", label: "All Cameras" },
